@@ -1,11 +1,14 @@
 package moneroutil
 
 import (
+	"fmt"
 	"math/big"
 	"strings"
 )
 
-const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+const (
+	BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+)
 
 var base58Lookup = map[string]int{
 	"1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5, "7": 6, "8": 7,
@@ -17,9 +20,48 @@ var base58Lookup = map[string]int{
 	"q": 48, "r": 49, "s": 50, "t": 51, "u": 52, "v": 53, "w": 54, "x": 55,
 	"y": 56, "z": 57,
 }
-var bigBase = big.NewInt(58)
+var (
+	bigBase   = big.NewInt(58)
+	converter = newBlockSizeConverter()
+)
 
-func encodeChunk(raw []byte, padding int) (result string) {
+// Monero base58 chucks every 11 bytes.
+type blockSizeConverter struct {
+	encodedBlockTable []int
+	decodedBlockTable map[int]int
+}
+
+func newBlockSizeConverter() *blockSizeConverter {
+	s := &blockSizeConverter{}
+	s.encodedBlockTable = []int{0, 2, 3, 5, 6, 7, 9, 10, 11}
+	s.decodedBlockTable = map[int]int{
+		0: 0, 2: 1, 3: 2, 5: 3, 6: 4, 7: 5, 9: 6, 10: 7, 11: 8}
+	return s
+}
+
+func (s *blockSizeConverter) EncodedSize(n int) int {
+	if n < 0 || len(s.encodedBlockTable) <= n {
+		return -1
+	}
+
+	return s.encodedBlockTable[n]
+}
+
+func (s *blockSizeConverter) DecodedSize(n int) int {
+	ret, ok := s.decodedBlockTable[n]
+	if !ok {
+		return -1
+	}
+
+	return ret
+}
+
+func encodeChunk(raw []byte) (result string) {
+	padding := converter.EncodedSize(len(raw))
+	if padding < 0 {
+		fmt.Println("WTF", len(raw), padding)
+		return ""
+	}
 	remainder := new(big.Int)
 	remainder.SetBytes(raw)
 	bigZero := new(big.Int)
@@ -35,6 +77,12 @@ func encodeChunk(raw []byte, padding int) (result string) {
 }
 
 func decodeChunk(encoded string) (result []byte) {
+	decodedSize := converter.DecodedSize(len(encoded))
+	if decodedSize < 0 {
+		return nil
+	}
+	result = make([]byte, decodedSize)
+
 	bigResult := big.NewInt(0)
 	currentMultiplier := big.NewInt(1)
 	tmp := new(big.Int)
@@ -44,7 +92,8 @@ func decodeChunk(encoded string) (result []byte) {
 		bigResult.Add(bigResult, tmp)
 		currentMultiplier.Mul(currentMultiplier, bigBase)
 	}
-	result = bigResult.Bytes()
+	raw := bigResult.Bytes()
+	copy(result[decodedSize-len(raw):], raw)
 	return
 }
 
@@ -56,22 +105,33 @@ func EncodeMoneroBase58(data ...[]byte) (result string) {
 	length := len(combined)
 	rounds := length / 8
 	for i := 0; i < rounds; i++ {
-		result += encodeChunk(combined[i*8:(i+1)*8], 11)
+		result += encodeChunk(combined[i*8 : (i+1)*8])
 	}
 	if length%8 > 0 {
-		result += encodeChunk(combined[rounds*8:], 7)
+		result += encodeChunk(combined[rounds*8:])
 	}
 	return
 }
 
 func DecodeMoneroBase58(data string) (result []byte) {
+	if len(data) == 0 {
+		return nil
+	}
+
 	length := len(data)
-	rounds := length / 11
-	for i := 0; i < rounds; i++ {
+	fullBlockCount := length / 11
+	lastBlockSize := length % 11
+	lastBlockDecodedSize := converter.DecodedSize(lastBlockSize)
+	if lastBlockDecodedSize < 0 {
+		return nil
+	}
+
+	for i := 0; i < fullBlockCount; i++ {
 		result = append(result, decodeChunk(data[i*11:(i+1)*11])...)
 	}
-	if length%11 > 0 {
-		result = append(result, decodeChunk(data[rounds*11:])...)
+
+	if lastBlockSize > 0 {
+		result = append(result, decodeChunk(data[fullBlockCount*11:])...)
 	}
 	return
 }
