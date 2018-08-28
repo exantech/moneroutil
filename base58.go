@@ -3,6 +3,7 @@ package moneroutil
 import (
 	"fmt"
 	"math/big"
+	"regexp"
 	"strings"
 )
 
@@ -115,6 +116,11 @@ func EncodeMoneroBase58(data ...[]byte) (result string) {
 
 func DecodeMoneroBase58(data string) (result []byte) {
 	if len(data) == 0 {
+		return nil
+	}
+
+	regex := regexp.MustCompile(fmt.Sprintf("[^%s]+", BASE58))
+	if regex.MatchString(data) {
 		return nil
 	}
 

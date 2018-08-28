@@ -3,6 +3,8 @@ package moneroutil
 import (
 	"math/rand"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDecodeThenEncode(t *testing.T) {
@@ -15,9 +17,7 @@ func TestDecodeThenEncode(t *testing.T) {
 		raw := DecodeMoneroBase58(addr)
 
 		enc := EncodeMoneroBase58(raw)
-		if addr != enc {
-			t.Fatalf("Origin:  %s\nEncoded: %s\n", addr, enc)
-		}
+		assert.Equal(t, addr, enc)
 	}
 }
 
@@ -31,8 +31,14 @@ func TestByFuzzing(t *testing.T) {
 		raw := DecodeMoneroBase58(encoded)
 		reproduced := EncodeMoneroBase58(raw)
 
-		if encoded != reproduced {
-			t.Fatalf("Origin:  %s\nEncoded: %s\n", encoded, reproduced)
-		}
+		assert.Equal(t, encoded, reproduced)
 	}
+}
+
+func TestIllegalChar(t *testing.T) {
+	assert.Nil(t, DecodeMoneroBase58(""))
+	assert.Nil(t, DecodeMoneroBase58("abcd#"))
+	assert.Nil(t, DecodeMoneroBase58("@abcd"))
+	assert.Nil(t, DecodeMoneroBase58("!AAAA"))
+	assert.Nil(t, DecodeMoneroBase58("01234O"))
 }
