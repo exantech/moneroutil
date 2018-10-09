@@ -3,6 +3,7 @@ package moneroutil
 import (
 	"crypto/rand"
 	"io"
+	"encoding/hex"
 )
 
 const (
@@ -57,11 +58,12 @@ func NewKeyPair() (privKey *Key, pubKey *Key) {
 	return
 }
 
-func ParseKey(buf io.Reader) (result Key, err error) {
-	key := make([]byte, KeyLength)
-	if _, err = buf.Read(key); err != nil {
-		return
-	}
-	copy(result[:], key)
-	return
+func ParseKey(buf io.Reader) (Key, error) {
+	key := [KeyLength]byte{}
+	_, err := io.ReadFull(buf, key[:])
+	return key, err
+}
+
+func (k *Key) String() string {
+	return hex.EncodeToString(k[:])
 }
