@@ -41,7 +41,7 @@ func TestVerifyRctSimple(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: error parsing tx: %s", test.name, err)
 		}
-		if !transaction.rctSignature.VerifyRctSimple() {
+		if !transaction.RctSignature.VerifyRctSimple() {
 			t.Errorf("%s: not verified", test.name)
 		}
 		pubkeys := make([][]CtKey, len(test.inputOutpoints))
