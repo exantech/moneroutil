@@ -13,14 +13,14 @@ const (
 
 var UnimplementedError = fmt.Errorf("Unimplemented")
 
-type txInGen struct {
-	height uint64
+type TxInGen struct {
+	Height uint64
 }
 
-type txInToKey struct {
-	amount     uint64
-	keyOffsets []uint64
-	keyImage   Key
+type TxInToKey struct {
+	Amount     uint64
+	KeyOffsets []uint64
+	KeyImage   Key
 }
 
 type TxInSerializer interface {
@@ -29,23 +29,23 @@ type TxInSerializer interface {
 }
 
 type TxOut struct {
-	amount uint64
-	key    Key
+	Amount uint64
+	Key    Key
 }
 
 type TransactionPrefix struct {
-	version    uint32
-	unlockTime uint64
-	vin        []TxInSerializer
-	vout       []*TxOut
-	extra      []byte
+	Version    uint32
+	UnlockTime uint64
+	Vin        []TxInSerializer
+	Vout       []*TxOut
+	Extra      []byte
 }
 
 type Transaction struct {
 	TransactionPrefix
-	signatures   []RingSignature
-	rctSignature *RctSig
-	expanded     bool
+	Signatures   []RingSignature
+	RctSignature *RctSig
+	Expanded     bool
 }
 
 func (h *Hash) Serialize() (result []byte) {
@@ -59,51 +59,51 @@ func (p *Key) Serialize() (result []byte) {
 }
 
 func (t *TxOut) Serialize() (result []byte) {
-	result = append(Uint64ToBytes(t.amount), txOutToKeyMarker)
-	result = append(result, t.key[:]...)
+	result = append(Uint64ToBytes(t.Amount), txOutToKeyMarker)
+	result = append(result, t.Key[:]...)
 	return
 }
 
 func (t *TxOut) String() (result string) {
-	result = fmt.Sprintf("key: %x", t.key)
+	result = fmt.Sprintf("key: %x", t.Key)
 	return
 }
 
-func (t *txInGen) TxInSerialize() (result []byte) {
-	result = append([]byte{txInGenMarker}, Uint64ToBytes(t.height)...)
+func (t *TxInGen) TxInSerialize() (result []byte) {
+	result = append([]byte{txInGenMarker}, Uint64ToBytes(t.Height)...)
 	return
 }
 
-func (t *txInGen) MixinLen() int {
+func (t *TxInGen) MixinLen() int {
 	return 0
 }
 
-func (t *txInToKey) TxInSerialize() (result []byte) {
-	result = append([]byte{txInToKeyMarker}, Uint64ToBytes(t.amount)...)
-	result = append(result, Uint64ToBytes(uint64(len(t.keyOffsets)))...)
-	for _, keyOffset := range t.keyOffsets {
+func (t *TxInToKey) TxInSerialize() (result []byte) {
+	result = append([]byte{txInToKeyMarker}, Uint64ToBytes(t.Amount)...)
+	result = append(result, Uint64ToBytes(uint64(len(t.KeyOffsets)))...)
+	for _, keyOffset := range t.KeyOffsets {
 		result = append(result, Uint64ToBytes(keyOffset)...)
 	}
-	result = append(result, t.keyImage[:]...)
+	result = append(result, t.KeyImage[:]...)
 	return
 }
 
-func (t *txInToKey) MixinLen() int {
-	return len(t.keyOffsets)
+func (t *TxInToKey) MixinLen() int {
+	return len(t.KeyOffsets)
 }
 
 func (t *TransactionPrefix) SerializePrefix() (result []byte) {
-	result = append(Uint64ToBytes(uint64(t.version)), Uint64ToBytes(t.unlockTime)...)
-	result = append(result, Uint64ToBytes(uint64(len(t.vin)))...)
-	for _, txIn := range t.vin {
+	result = append(Uint64ToBytes(uint64(t.Version)), Uint64ToBytes(t.UnlockTime)...)
+	result = append(result, Uint64ToBytes(uint64(len(t.Vin)))...)
+	for _, txIn := range t.Vin {
 		result = append(result, txIn.TxInSerialize()...)
 	}
-	result = append(result, Uint64ToBytes(uint64(len(t.vout)))...)
-	for _, txOut := range t.vout {
+	result = append(result, Uint64ToBytes(uint64(len(t.Vout)))...)
+	for _, txOut := range t.Vout {
 		result = append(result, txOut.Serialize()...)
 	}
-	result = append(result, Uint64ToBytes(uint64(len(t.extra)))...)
-	result = append(result, t.extra...)
+	result = append(result, Uint64ToBytes(uint64(len(t.Extra)))...)
+	result = append(result, t.Extra...)
 	return
 }
 
@@ -113,30 +113,30 @@ func (t *TransactionPrefix) PrefixHash() (hash Hash) {
 }
 
 func (t *TransactionPrefix) OutputSum() (sum uint64) {
-	for _, output := range t.vout {
-		sum += output.amount
+	for _, output := range t.Vout {
+		sum += output.Amount
 	}
 	return
 }
 
 func (t *Transaction) Serialize() (result []byte) {
 	result = t.SerializePrefix()
-	if t.version == 1 {
-		for i := 0; i < len(t.signatures); i++ {
-			result = append(result, t.signatures[i].Serialize()...)
+	if t.Version == 1 {
+		for i := 0; i < len(t.Signatures); i++ {
+			result = append(result, t.Signatures[i].Serialize()...)
 		}
 	} else {
-		result = append(result, t.rctSignature.SerializeBase()...)
-		result = append(result, t.rctSignature.SerializePrunable()...)
+		result = append(result, t.RctSignature.SerializeBase()...)
+		result = append(result, t.RctSignature.SerializePrunable()...)
 	}
 	return
 }
 
 func (t *Transaction) SerializeBase() (result []byte) {
-	if t.version == 1 {
+	if t.Version == 1 {
 		result = t.Serialize()
 	} else {
-		result = append(t.SerializePrefix(), t.rctSignature.SerializeBase()...)
+		result = append(t.SerializePrefix(), t.RctSignature.SerializeBase()...)
 	}
 	return
 }
@@ -144,17 +144,17 @@ func (t *Transaction) SerializeBase() (result []byte) {
 // ExpandTransaction does nothing for version 1 transactions, but for version 2
 // derives all the implied elements of the ring signature
 func (t *Transaction) ExpandTransaction(outputKeys [][]CtKey) {
-	if t.version == 1 {
+	if t.Version == 1 {
 		return
 	}
-	r := t.rctSignature
+	r := t.RctSignature
 	if r.sigType == RCTTypeNull {
 		return
 	}
 
 	// fill in the outPk property of the ring signature
 	for i, ctKey := range r.outPk {
-		ctKey.destination = t.vout[i].key
+		ctKey.destination = t.Vout[i].Key
 	}
 
 	r.message = Key(t.PrefixHash())
@@ -167,41 +167,41 @@ func (t *Transaction) ExpandTransaction(outputKeys [][]CtKey) {
 			}
 		}
 		r.mlsagSigs = make([]MlsagSig, 1)
-		r.mlsagSigs[0].ii = make([]Key, len(t.vin))
-		for i, txIn := range t.vin {
-			txInWithKey, _ := txIn.(*txInToKey)
-			r.mlsagSigs[0].ii[i] = txInWithKey.keyImage
+		r.mlsagSigs[0].ii = make([]Key, len(t.Vin))
+		for i, txIn := range t.Vin {
+			txInWithKey, _ := txIn.(*TxInToKey)
+			r.mlsagSigs[0].ii[i] = txInWithKey.KeyImage
 		}
 	} else if r.sigType == RCTTypeSimple {
 		r.mixRing = outputKeys
-		r.mlsagSigs = make([]MlsagSig, len(t.vin))
-		for i, txIn := range t.vin {
-			txInWithKey, _ := txIn.(*txInToKey)
+		r.mlsagSigs = make([]MlsagSig, len(t.Vin))
+		for i, txIn := range t.Vin {
+			txInWithKey, _ := txIn.(*TxInToKey)
 			r.mlsagSigs[i].ii = make([]Key, 1)
-			r.mlsagSigs[i].ii[0] = txInWithKey.keyImage
+			r.mlsagSigs[i].ii[0] = txInWithKey.KeyImage
 		}
 	}
-	t.expanded = true
+	t.Expanded = true
 }
 
 func (t *Transaction) GetHash() (result Hash) {
-	if t.version == 1 {
+	if t.Version == 1 {
 		result = Keccak256(t.Serialize())
 	} else {
 		// version 2 requires first computing 3 separate hashes
 		// prefix, rctBase and rctPrunable
 		// and then hashing the hashes together to get the final hash
 		prefixHash := t.PrefixHash()
-		rctBaseHash := t.rctSignature.BaseHash()
-		rctPrunableHash := t.rctSignature.PrunableHash()
+		rctBaseHash := t.RctSignature.BaseHash()
+		rctPrunableHash := t.RctSignature.PrunableHash()
 		result = Keccak256(prefixHash[:], rctBaseHash[:], rctPrunableHash[:])
 	}
 	return
 }
 
-func ParseTxInGen(buf io.Reader) (txIn *txInGen, err error) {
-	t := new(txInGen)
-	t.height, err = ReadVarInt(buf)
+func ParseTxInGen(buf io.Reader) (txIn *TxInGen, err error) {
+	t := new(TxInGen)
+	t.Height, err = ReadVarInt(buf)
 	if err != nil {
 		return
 	}
@@ -209,9 +209,9 @@ func ParseTxInGen(buf io.Reader) (txIn *txInGen, err error) {
 	return
 }
 
-func ParseTxInToKey(buf io.Reader) (txIn *txInToKey, err error) {
-	t := new(txInToKey)
-	t.amount, err = ReadVarInt(buf)
+func ParseTxInToKey(buf io.Reader) (txIn *TxInToKey, err error) {
+	t := new(TxInToKey)
+	t.Amount, err = ReadVarInt(buf)
 	if err != nil {
 		return
 	}
@@ -219,9 +219,9 @@ func ParseTxInToKey(buf io.Reader) (txIn *txInToKey, err error) {
 	if err != nil {
 		return
 	}
-	t.keyOffsets = make([]uint64, keyOffsetLen, keyOffsetLen)
+	t.KeyOffsets = make([]uint64, keyOffsetLen, keyOffsetLen)
 	for i := 0; i < int(keyOffsetLen); i++ {
-		t.keyOffsets[i], err = ReadVarInt(buf)
+		t.KeyOffsets[i], err = ReadVarInt(buf)
 		if err != nil {
 			return
 		}
@@ -235,7 +235,7 @@ func ParseTxInToKey(buf io.Reader) (txIn *txInToKey, err error) {
 		err = fmt.Errorf("Buffer not long enough for public key")
 		return
 	}
-	copy(t.keyImage[:], pubKey)
+	copy(t.KeyImage[:], pubKey)
 	txIn = t
 	return
 }
@@ -261,7 +261,7 @@ func ParseTxIn(buf io.Reader) (txIn TxInSerializer, err error) {
 
 func ParseTxOut(buf io.Reader) (txOut *TxOut, err error) {
 	t := new(TxOut)
-	t.amount, err = ReadVarInt(buf)
+	t.Amount, err = ReadVarInt(buf)
 	if err != nil {
 		return
 	}
@@ -276,7 +276,7 @@ func ParseTxOut(buf io.Reader) (txOut *TxOut, err error) {
 	}
 	switch {
 	case marker[0] == txOutToKeyMarker:
-		t.key, err = ParseKey(buf)
+		t.Key, err = ParseKey(buf)
 	default:
 		err = fmt.Errorf("Bad Marker")
 		return
@@ -312,8 +312,8 @@ func ParseTransaction(buf io.Reader) (transaction *Transaction, err error) {
 	if err != nil {
 		return
 	}
-	t.version = uint32(version)
-	t.unlockTime, err = ReadVarInt(buf)
+	t.Version = uint32(version)
+	t.UnlockTime, err = ReadVarInt(buf)
 	if err != nil {
 		return
 	}
@@ -322,13 +322,13 @@ func ParseTransaction(buf io.Reader) (transaction *Transaction, err error) {
 		return
 	}
 	var mixinLengths []int
-	t.vin = make([]TxInSerializer, int(numInputs), int(numInputs))
+	t.Vin = make([]TxInSerializer, int(numInputs), int(numInputs))
 	for i := 0; i < int(numInputs); i++ {
-		t.vin[i], err = ParseTxIn(buf)
+		t.Vin[i], err = ParseTxIn(buf)
 		if err != nil {
 			return
 		}
-		mixinLen := t.vin[i].MixinLen()
+		mixinLen := t.Vin[i].MixinLen()
 		if mixinLen > 0 {
 			mixinLengths = append(mixinLengths, mixinLen)
 		}
@@ -337,19 +337,19 @@ func ParseTransaction(buf io.Reader) (transaction *Transaction, err error) {
 	if err != nil {
 		return
 	}
-	t.vout = make([]*TxOut, int(numOutputs), int(numOutputs))
+	t.Vout = make([]*TxOut, int(numOutputs), int(numOutputs))
 	for i := 0; i < int(numOutputs); i++ {
-		t.vout[i], err = ParseTxOut(buf)
+		t.Vout[i], err = ParseTxOut(buf)
 		if err != nil {
 			return
 		}
 	}
-	t.extra, err = ParseExtra(buf)
+	t.Extra, err = ParseExtra(buf)
 	if err != nil {
 		return
 	}
-	if t.version == 1 {
-		t.signatures, err = ParseSignatures(mixinLengths, buf)
+	if t.Version == 1 {
+		t.Signatures, err = ParseSignatures(mixinLengths, buf)
 		if err != nil {
 			return
 		}
@@ -358,7 +358,7 @@ func ParseTransaction(buf io.Reader) (transaction *Transaction, err error) {
 		if len(mixinLengths) > 0 {
 			nMixins = mixinLengths[0] - 1
 		}
-		t.rctSignature, err = ParseRingCtSignature(buf, int(numInputs), int(numOutputs), nMixins)
+		t.RctSignature, err = ParseRingCtSignature(buf, int(numInputs), int(numOutputs), nMixins)
 		if err != nil {
 			return
 		}

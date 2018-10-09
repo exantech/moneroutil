@@ -118,35 +118,35 @@ func TestCoinbaseTransaction(t *testing.T) {
 		if wantHash != gotHash {
 			t.Errorf("%s: want %x, got %x", test.name, wantHash, gotHash)
 		}
-		if test.version != transaction.version {
-			t.Errorf("%s: version: want %d, got %d", test.name, test.version, transaction.version)
+		if test.version != transaction.Version {
+			t.Errorf("%s: version: want %d, got %d", test.name, test.version, transaction.Version)
 		}
 		wantUnlockTime := uint64(test.blockNum + 60)
-		if wantUnlockTime != transaction.unlockTime {
-			t.Errorf("%s: unlock: want %d, got %d", test.name, wantUnlockTime, transaction.unlockTime)
+		if wantUnlockTime != transaction.UnlockTime {
+			t.Errorf("%s: unlock: want %d, got %d", test.name, wantUnlockTime, transaction.UnlockTime)
 		}
 		gotSum := transaction.OutputSum()
 		if test.outputSum != gotSum {
 			t.Errorf("%s: sum: want %d, got %d", test.name, test.outputSum, gotSum)
 		}
-		gotLen := len(transaction.vin)
+		gotLen := len(transaction.Vin)
 		if 1 != gotLen {
 			t.Errorf("%s: input len: want %d, got %d", test.name, 1, gotLen)
 		}
 		wantIn := append([]byte{0xff}, Uint64ToBytes(test.blockNum)...)
-		gotIn := transaction.vin[0].TxInSerialize()
+		gotIn := transaction.Vin[0].TxInSerialize()
 		if bytes.Compare(wantIn, gotIn) != 0 {
 			t.Errorf("%s: input 0: want %x, got %x", test.name, wantIn, gotIn)
 		}
 		wantLen := len(test.outputKeys)
-		gotLen = len(transaction.vout)
+		gotLen = len(transaction.Vout)
 		if wantLen != gotLen {
 			t.Errorf("%s: output len: want %d, got %d", test.name, wantLen, gotLen)
 		}
 		for i, outputKey := range test.outputKeys {
 			wantKey, _ := hex.DecodeString(outputKey)
-			txOut := transaction.vout[i]
-			gotKey := txOut.key[:]
+			txOut := transaction.Vout[i]
+			gotKey := txOut.Key[:]
 			if bytes.Compare(wantKey, gotKey) != 0 {
 				t.Errorf("%s: output %d: want %x, got %x", test.name, i, wantKey, gotKey)
 			}
@@ -341,58 +341,58 @@ func TestTransaction(t *testing.T) {
 		if wantHash != gotHash {
 			t.Errorf("%s: want %x, got %x", test.name, wantHash, gotHash)
 		}
-		if test.version != transaction.version {
-			t.Errorf("%s: version: want %d, got %d", test.name, test.version, transaction.version)
+		if test.version != transaction.Version {
+			t.Errorf("%s: version: want %d, got %d", test.name, test.version, transaction.Version)
 		}
 		wantUnlockTime := uint64(0)
-		if wantUnlockTime != transaction.unlockTime {
-			t.Errorf("%s: unlock: want %d, got %d", test.name, wantUnlockTime, transaction.unlockTime)
+		if wantUnlockTime != transaction.UnlockTime {
+			t.Errorf("%s: unlock: want %d, got %d", test.name, wantUnlockTime, transaction.UnlockTime)
 		}
 		gotSum := transaction.OutputSum()
 		if test.outputSum != gotSum {
 			t.Errorf("%s: output sum: want %d, got %d", test.name, test.outputSum, gotSum)
 		}
 		wantLen := len(test.inputKeyImages)
-		gotLen := len(transaction.vin)
+		gotLen := len(transaction.Vin)
 		if wantLen != gotLen {
 			t.Errorf("%s: input len: want %d, got %d", test.name, wantLen, gotLen)
 		}
 		var gotInputSum uint64
 		for i, keyImage := range test.inputKeyImages {
 			wantImage, _ := hex.DecodeString(keyImage)
-			txIn, ok := transaction.vin[i].(*txInToKey)
+			txIn, ok := transaction.Vin[i].(*TxInToKey)
 			if !ok {
-				t.Errorf("%s: input %d: not txInToKey", test.name, i)
+				t.Errorf("%s: input %d: not TxInToKey", test.name, i)
 				continue
 			}
-			gotImage := txIn.keyImage[:]
+			gotImage := txIn.KeyImage[:]
 			if bytes.Compare(wantImage, gotImage) != 0 {
 				t.Errorf("%s: input key image %d: want %x, got %x", test.name, i, wantImage, gotImage)
 			}
-			gotInputSum += txIn.amount
+			gotInputSum += txIn.Amount
 		}
 		if test.inputSum != gotInputSum {
 			t.Errorf("%s: input sum: want %d, got %d", test.name, test.inputSum, gotInputSum)
 		}
 		wantLen = len(test.outputKeys)
-		gotLen = len(transaction.vout)
+		gotLen = len(transaction.Vout)
 		if wantLen != gotLen {
 			t.Errorf("%s: output len: want %d, got %d", test.name, wantLen, gotLen)
 		}
 		for i, outputKey := range test.outputKeys {
 			wantKey, _ := hex.DecodeString(outputKey)
-			txOut := transaction.vout[i]
-			gotKey := txOut.key[:]
+			txOut := transaction.Vout[i]
+			gotKey := txOut.Key[:]
 			if bytes.Compare(wantKey, gotKey) != 0 {
 				t.Errorf("%s: output key %d: want %x, got %x", test.name, i, wantKey, gotKey)
 			}
 		}
 		wantLen = test.lenSigs
-		gotLen = len(transaction.signatures)
+		gotLen = len(transaction.Signatures)
 		if wantLen != gotLen {
 			t.Errorf("%s: signature len: want %d, got %d", test.name, wantLen, gotLen)
 		}
-		for i, mixins := range transaction.signatures {
+		for i, mixins := range transaction.Signatures {
 			wantLen = test.mixinLength
 			gotLen = len(mixins)
 			if wantLen != gotLen {
