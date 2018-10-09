@@ -2,8 +2,8 @@ package moneroutil
 
 import (
 	"crypto/rand"
-	"io"
 	"encoding/hex"
+	"io"
 )
 
 const (
