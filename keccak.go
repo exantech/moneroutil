@@ -1,6 +1,10 @@
 package moneroutil
 
 import (
+	"bytes"
+	"encoding/hex"
+	"io"
+
 	"github.com/ebfe/keccak"
 )
 
@@ -11,6 +15,10 @@ const (
 
 type Hash [HashLength]byte
 type Checksum [ChecksumLength]byte
+
+var (
+	NullHash = [HashLength]byte{}
+)
 
 func Keccak256(data ...[]byte) (result Hash) {
 	h := keccak.New256()
@@ -36,4 +44,18 @@ func Keccak512(data ...[]byte) (result Hash) {
 	r := h.Sum(nil)
 	copy(result[:], r)
 	return
+}
+
+func (h Hash) String() string {
+	return hex.EncodeToString(h[:])
+}
+
+func HashesEqual(h1, h2 Hash) bool {
+	return bytes.Equal(h1[:], h2[:])
+}
+
+func ParseHash(buf io.Reader) (Hash, error) {
+	h := Hash{}
+	_, err := io.ReadFull(buf, h[:])
+	return h, err
 }
