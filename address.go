@@ -5,15 +5,15 @@ import (
 )
 
 type Address struct {
-	network     int
-	spendingKey []byte
-	viewingKey  []byte
+	Network  int
+	SpendKey Key
+	ViewKey  Key
 }
 
 func (a *Address) Base58() (result string) {
-	prefix := []byte{byte(a.network)}
-	checksum := GetChecksum(prefix, a.spendingKey, a.viewingKey)
-	result = EncodeMoneroBase58(prefix, a.spendingKey, a.viewingKey, checksum[:])
+	prefix := []byte{byte(a.Network)}
+	checksum := GetChecksum(prefix, a.SpendKey[:], a.ViewKey[:])
+	result = EncodeMoneroBase58(prefix, a.SpendKey[:], a.ViewKey[:], checksum[:])
 	return
 }
 
@@ -29,9 +29,9 @@ func NewAddress(address string) (result *Address, err string) {
 		return
 	}
 	result = &Address{
-		network:     int(raw[0]),
-		spendingKey: raw[1:33],
-		viewingKey:  raw[33:65],
+		Network:  int(raw[0]),
 	}
+	copy(result.SpendKey[:], raw[1:33])
+	copy(result.ViewKey[:], raw[33:65])
 	return
 }
