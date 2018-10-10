@@ -3,6 +3,7 @@ package moneroutil
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"io"
 )
 
@@ -66,4 +67,19 @@ func ParseKey(buf io.Reader) (Key, error) {
 
 func (k *Key) String() string {
 	return hex.EncodeToString(k[:])
+}
+
+func HexToKey(h string) (Key, error) {
+	result := Key{}
+	if len(h) != KeyLength*2 {
+		return result, errors.New("key hex string must be 64 bytes long")
+	}
+
+	byteSlice, err := hex.DecodeString(h)
+	if err != nil {
+		return result, err
+	}
+
+	copy(result[:], byteSlice)
+	return result, nil
 }

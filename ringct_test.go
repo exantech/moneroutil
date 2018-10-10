@@ -48,8 +48,9 @@ func TestVerifyRctSimple(t *testing.T) {
 		for i, outPoint := range test.inputOutpoints {
 			pubkeys[i] = make([]CtKey, len(outPoint))
 			for j, point := range outPoint {
+				d, _ := HexToKey(point)
 				pubkeys[i][j] = CtKey{
-					destination: HexToKey(point),
+					destination: d,
 				}
 			}
 		}

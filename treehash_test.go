@@ -30,7 +30,7 @@ func TestTreeHashCnt(t *testing.T) {
 func HexHashesToHashes(hexes []string) []Hash {
 	res := make([]Hash, len(hexes))
 	for i, h := range hexes {
-		res[i] = HexToHash(h)
+		res[i], _ = HexToHash(h)
 	}
 
 	return res
@@ -101,6 +101,7 @@ func TestTreeHash(t *testing.T) {
 	for i, test := range cases {
 		h := HexHashesToHashes(originalHashes[0:test.count])
 		actual := TreeHash(h)
-		assert.Equal(t, HexToHash(test.expected), actual, "for count: %d (index: %d)", test.count, i)
+		expected, _ := HexToHash(test.expected)
+		assert.Equal(t, expected, actual, "for count: %d (index: %d)", test.count, i)
 	}
 }
