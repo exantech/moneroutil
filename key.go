@@ -83,3 +83,20 @@ func HexToKey(h string) (Key, error) {
 	copy(result[:], byteSlice)
 	return result, nil
 }
+
+func KeyDerivation(a, B *Key) Key {
+	point := new(ExtendedGroupElement)
+	point.FromBytes(B)
+
+	production := new(ProjectiveGroupElement)
+	GeScalarMult(production, a, point)
+
+	tmp2 := new(CompletedGroupElement)
+	result := new(ExtendedGroupElement)
+	var got Key
+	GeMul8(tmp2, production)
+
+	tmp2.ToExtended(result)
+	result.ToBytes(&got)
+	return got
+}
