@@ -2,6 +2,7 @@ package moneroutil
 
 import (
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScMulSub(t *testing.T) {
@@ -92,6 +93,47 @@ func TestScalarMult(t *testing.T) {
 		if want != got {
 			t.Errorf("%s: want %x, got %x", test.name, want, got)
 		}
+	}
+}
+
+func TestScalarMultWrapper(t *testing.T) {
+	tests := []struct {
+		name      string
+		scalarHex string
+		pointHex  string
+		wantHex   string
+	}{
+		{
+			name:      "zero",
+			scalarHex: "0000000000000000000000000000000000000000000000000000000000000000",
+			pointHex:  "0100000000000000000000000000000000000000000000000000000000000000",
+			wantHex:   "0100000000000000000000000000000000000000000000000000000000000000",
+		},
+		{
+			name:      "basepoint * 1",
+			scalarHex: "0100000000000000000000000000000000000000000000000000000000000000",
+			pointHex:  "5866666666666666666666666666666666666666666666666666666666666666",
+			wantHex:   "5866666666666666666666666666666666666666666666666666666666666666",
+		},
+		{
+			name:      "basepoint * 8",
+			scalarHex: "0800000000000000000000000000000000000000000000000000000000000000",
+			pointHex:  "5866666666666666666666666666666666666666666666666666666666666666",
+			wantHex:   "b4b937fca95b2f1e93e41e62fc3c78818ff38a66096fad6e7973e5c90006d321",
+		},
+		{
+			name:      "basepoint * 2",
+			scalarHex: "0200000000000000000000000000000000000000000000000000000000000000",
+			pointHex:  "2f1132ca61ab38dff00f2fea3228f24c6c71d58085b80e47e19515cb27e8d047",
+			wantHex:   "b4b937fca95b2f1e93e41e62fc3c78818ff38a66096fad6e7973e5c90006d321",
+		},
+	}
+	for _, test := range tests {
+		a, _ := HexToKey(test.scalarHex)
+		B, _ := HexToKey(test.pointHex)
+		expected, _ := HexToKey(test.wantHex)
+		actual := ScalarMult(&a, &B)
+		assert.Equal(t, expected, actual, test.name)
 	}
 }
 
