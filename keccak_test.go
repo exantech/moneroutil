@@ -35,7 +35,7 @@ func TestKeccak256(t *testing.T) {
 	for _, test := range tests {
 		message, _ := hex.DecodeString(test.messageHex)
 		got := Keccak256(message)
-		want := HexToHash(test.wantHex)
+		want, _ := HexToHash(test.wantHex)
 		if want != got {
 			t.Errorf("want %x, got %x", want, got)
 		}

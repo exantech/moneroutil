@@ -3,6 +3,7 @@ package moneroutil
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"io"
 
 	"github.com/ebfe/keccak"
@@ -58,4 +59,19 @@ func ParseHash(buf io.Reader) (Hash, error) {
 	h := Hash{}
 	_, err := io.ReadFull(buf, h[:])
 	return h, err
+}
+
+func HexToHash(h string) (Hash, error) {
+	result := Hash{}
+	if len(h) != HashLength*2 {
+		return result, errors.New("hash hex string must be 64 bytes long")
+	}
+
+	byteSlice, err := hex.DecodeString(h)
+	if err != nil {
+		return result, err
+	}
+
+	copy(result[:], byteSlice)
+	return result, nil
 }

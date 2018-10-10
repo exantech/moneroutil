@@ -20,7 +20,7 @@ func TestGetBlockHash(t *testing.T) {
 	}
 
 	for _, test := range cases {
-		expected := HexToHash(test.hash)
+		expected, _ := HexToHash(test.hash)
 
 		serializedBlock, _ := hex.DecodeString(test.block)
 		reader := bytes.NewReader(serializedBlock)

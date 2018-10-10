@@ -759,7 +759,7 @@ func TestHashToScalar(t *testing.T) {
 	}
 	for _, test := range tests {
 		toHash, _ := hex.DecodeString(test.hashHex)
-		want := HexToKey(test.scalarHex)
+		want, _ := HexToKey(test.scalarHex)
 		got := HashToScalar(toHash)
 		if want != *got {
 			t.Errorf("%x, want %x, got %x", toHash, want, got)
@@ -1798,10 +1798,10 @@ func TestHashToEC(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		pubkeyBytes := HexToKey(test.pubkeyHex)
+		pubkeyBytes, _ := HexToKey(test.pubkeyHex)
 		pubKey := new(Key)
 		pubKey.FromBytes(pubkeyBytes)
-		want := HexToKey(test.extendedHex)
+		want, _ := HexToKey(test.extendedHex)
 		ecPoint := pubKey.HashToEC()
 		var got Key
 		ecPoint.ToBytes(&got)

@@ -35,10 +35,10 @@ func TestScMulSub(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		a := HexToKey(test.aHex)
-		b := HexToKey(test.bHex)
-		c := HexToKey(test.cHex)
-		want := HexToKey(test.wantHex)
+		a, _ := HexToKey(test.aHex)
+		b, _ := HexToKey(test.bHex)
+		c, _ := HexToKey(test.cHex)
+		want, _ := HexToKey(test.wantHex)
 		var got Key
 		ScMulSub(&got, &a, &b, &c)
 		if want != got {
@@ -80,9 +80,9 @@ func TestScalarMult(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		scalarBytes := HexToKey(test.scalarHex)
-		pointBytes := HexToKey(test.pointHex)
-		want := HexToKey(test.wantHex)
+		scalarBytes, _ := HexToKey(test.scalarHex)
+		pointBytes, _ := HexToKey(test.pointHex)
+		want, _ := HexToKey(test.wantHex)
 		point := new(ExtendedGroupElement)
 		point.FromBytes(&pointBytes)
 		result := new(ProjectiveGroupElement)
@@ -113,8 +113,8 @@ func TestGeMul8(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		pointBytes := HexToKey(test.pointHex)
-		want := HexToKey(test.wantHex)
+		pointBytes, _ := HexToKey(test.pointHex)
+		want, _ := HexToKey(test.wantHex)
 		tmp := new(ExtendedGroupElement)
 		tmp.FromBytes(&pointBytes)
 		point := new(ProjectiveGroupElement)
@@ -169,10 +169,10 @@ func TestGeDoubleScalarMultVartime(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		pointBytes := HexToKey(test.pointHex)
-		a := HexToKey(test.scalar1Hex)
-		b := HexToKey(test.scalar2Hex)
-		want := HexToKey(test.wantHex)
+		pointBytes, _ := HexToKey(test.pointHex)
+		a, _ := HexToKey(test.scalar1Hex)
+		b, _ := HexToKey(test.scalar2Hex)
+		want, _ := HexToKey(test.wantHex)
 		point := new(ExtendedGroupElement)
 		point.FromBytes(&pointBytes)
 		result := new(ProjectiveGroupElement)
@@ -228,11 +228,11 @@ func TestGeDoubleScalarMultPrecompVartime(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		point1Bytes := HexToKey(test.point1Hex)
-		point2Bytes := HexToKey(test.point2Hex)
-		a := HexToKey(test.scalar1Hex)
-		b := HexToKey(test.scalar2Hex)
-		want := HexToKey(test.wantHex)
+		point1Bytes, _ := HexToKey(test.point1Hex)
+		point2Bytes, _ := HexToKey(test.point2Hex)
+		a, _ := HexToKey(test.scalar1Hex)
+		b, _ := HexToKey(test.scalar2Hex)
+		want, _ := HexToKey(test.wantHex)
 		point1 := new(ExtendedGroupElement)
 		point1.FromBytes(&point1Bytes)
 		point2 := new(ExtendedGroupElement)
@@ -1605,7 +1605,7 @@ func TestScValid(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		scalar := HexToKey(test.scalarHex)
+		scalar, _ := HexToKey(test.scalarHex)
 		got := ScValid(&scalar)
 		if test.valid != got {
 			t.Errorf("%x: want %t, got %t", scalar, test.valid, got)
