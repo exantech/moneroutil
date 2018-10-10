@@ -69,16 +69,16 @@ func TestAddress(t *testing.T) {
 		spendingKey, _ = hex.DecodeString(test.spendingKeyHex)
 		viewingKey, _ = hex.DecodeString(test.viewingKeyHex)
 		address, _ := NewAddress(test.address)
-		if address.network != test.network {
-			t.Errorf("%s: want: %d, got: %d", test.name, test.network, address.network)
+		if address.Network != test.network {
+			t.Errorf("%s: want: %d, got: %d", test.name, test.network, address.Network)
 			continue
 		}
-		if bytes.Compare(address.spendingKey, spendingKey) != 0 {
-			t.Errorf("%s: want: %x, got: %x", test.name, spendingKey, address.spendingKey)
+		if bytes.Compare(address.SpendKey[:], spendingKey) != 0 {
+			t.Errorf("%s: want: %x, got: %x", test.name, spendingKey, address.SpendKey)
 			continue
 		}
-		if bytes.Compare(address.viewingKey, viewingKey) != 0 {
-			t.Errorf("%s: want: %x, got: %x", test.name, viewingKey, address.viewingKey)
+		if bytes.Compare(address.ViewKey[:], viewingKey) != 0 {
+			t.Errorf("%s: want: %x, got: %x", test.name, viewingKey, address.ViewKey)
 			continue
 		}
 		base58 = address.Base58()
