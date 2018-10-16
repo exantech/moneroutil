@@ -307,13 +307,13 @@ func ParseExtra(buf io.Reader) (extra []byte, err error) {
 	return
 }
 
-func ParseTransactionPrefixBytes(buf []byte) (*Transaction, error) {
+func ParseTransactionPrefixBytes(buf []byte) (*TransactionPrefix, error) {
 	reader := bytes.NewReader(buf)
 	return ParseTransactionPrefix(reader)
 }
 
-func ParseTransactionPrefix(buf io.Reader) (*Transaction, error) {
-	t := new(Transaction)
+func ParseTransactionPrefix(buf io.Reader) (*TransactionPrefix, error) {
+	t := new(TransactionPrefix)
 	version, err := ReadVarInt(buf)
 	if err != nil {
 		return nil, err
@@ -364,21 +364,47 @@ func ParseTransactionBytes(buf []byte) (*Transaction, error) {
 }
 
 func ParseTransaction(buf io.Reader) (transaction *Transaction, err error) {
-	t, err := ParseTransactionPrefix(buf)
+	t := new(Transaction)
+	version, err := ReadVarInt(buf)
 	if err != nil {
-		return nil, err
+		return
 	}
-
-	numInputs := len(t.Vin)
-	numOutputs := len(t.Vout)
-	mixinLengths := make([]int, 0, numInputs)
-	for _, in := range t.Vin {
-		mixinLen := in.MixinLen()
+	t.Version = uint32(version)
+	t.UnlockTime, err = ReadVarInt(buf)
+	if err != nil {
+		return
+	}
+	numInputs, err := ReadVarInt(buf)
+	if err != nil {
+		return
+	}
+	var mixinLengths []int
+	t.Vin = make([]TxInSerializer, int(numInputs), int(numInputs))
+	for i := 0; i < int(numInputs); i++ {
+		t.Vin[i], err = ParseTxIn(buf)
+		if err != nil {
+			return
+		}
+		mixinLen := t.Vin[i].MixinLen()
 		if mixinLen > 0 {
 			mixinLengths = append(mixinLengths, mixinLen)
 		}
 	}
-
+	numOutputs, err := ReadVarInt(buf)
+	if err != nil {
+		return
+	}
+	t.Vout = make([]*TxOut, int(numOutputs), int(numOutputs))
+	for i := 0; i < int(numOutputs); i++ {
+		t.Vout[i], err = ParseTxOut(buf)
+		if err != nil {
+			return
+		}
+	}
+	t.Extra, err = ParseExtra(buf)
+	if err != nil {
+		return
+	}
 	if t.Version == 1 {
 		t.Signatures, err = ParseSignatures(mixinLengths, buf)
 		if err != nil {
