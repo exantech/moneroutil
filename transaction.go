@@ -1,6 +1,7 @@
 package moneroutil
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 )
@@ -306,6 +307,11 @@ func ParseExtra(buf io.Reader) (extra []byte, err error) {
 	return
 }
 
+func ParseTransactionPrefixBytes(buf []byte) (*Transaction, error) {
+	reader := bytes.NewReader(buf)
+	return ParseTransactionPrefix(reader)
+}
+
 func ParseTransactionPrefix(buf io.Reader) (*Transaction, error) {
 	t := new(Transaction)
 	version, err := ReadVarInt(buf)
@@ -350,6 +356,11 @@ func ParseTransactionPrefix(buf io.Reader) (*Transaction, error) {
 	}
 
 	return t, nil
+}
+
+func ParseTransactionBytes(buf []byte) (*Transaction, error) {
+	reader := bytes.NewReader(buf)
+	return ParseTransaction(reader)
 }
 
 func ParseTransaction(buf io.Reader) (transaction *Transaction, err error) {
